@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---- Enums ----
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  STAFF
+  CUSTOMER
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEAWAY
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  SERVED
+  DELIVERED
+  CANCELLED
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  SEATED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum KitchenOrderStatus {
+  PENDING
+  IN_PROGRESS
+  READY
+  SERVED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum NotificationType {
+  ORDER
+  RESERVATION
+  BILLING
+  KITCHEN
+  GENERAL
+}
+
+// ---- Models ----
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  avatar        String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  customer      Customer?
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Customer {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  loyaltyPoints   Int       @default(0)
+  preferences     Json?
+  addresses       Json?     // [{label, address, city, pincode, isDefault}]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders          Order[]
+  reservations    Reservation[]
+  bills           Bill[]
+
+  @@map("customers")
+}
+
+model MenuCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  items       MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  price       Int          // paise
+  categoryId  String
+  image       String?
+  isVeg       Boolean      @default(true)
+  isAvailable Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+  @@index([isAvailable])
+  @@map("menu_items")
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  customerId      String?
+  tableId         String?
+  type            OrderType     @default(DINE_IN)
+  status          OrderStatus   @default(PENDING)
+  items           Json          // [{menuItemId, name, price, quantity, notes}]
+  subtotal        Int           // paise
+  tax             Int           // paise
+  total           Int           // paise
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   String?       // razorpay, cash, card, upi
+  deliveryAddress Json?         // {address, city, pincode, phone}
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  customer        Customer?     @relation(fields: [customerId], references: [id])
+  table           Table?        @relation(fields: [tableId], references: [id])
+  kitchenOrders   KitchenOrder[]
+  bill            Bill?
+
+  @@index([customerId])
+  @@index([tableId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model Table {
+  id        String      @id @default(cuid())
+  number    Int         @unique
+  capacity  Int         @default(4)
+  section   String?     // indoor, outdoor, private, etc.
+  status    TableStatus @default(AVAILABLE)
+  qrCode    String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  orders       Order[]
+  reservations Reservation[]
+
+  @@map("tables")
+}
+
+model Reservation {
+  id          String            @id @default(cuid())
+  customerId  String?
+  guestName   String
+  guestPhone  String
+  guestEmail  String?
+  tableId     String?
+  date        DateTime
+  time        String            // "19:00"
+  partySize   Int
+  status      ReservationStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  customer    Customer?         @relation(fields: [customerId], references: [id])
+  table       Table?            @relation(fields: [tableId], references: [id])
+
+  @@index([date])
+  @@index([status])
+  @@index([customerId])
+  @@map("reservations")
+}
+
+model KitchenOrder {
+  id          String             @id @default(cuid())
+  orderId     String
+  items       Json               // [{menuItemId, name, quantity, notes, status}]
+  status      KitchenOrderStatus @default(PENDING)
+  priority    Int                @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  // Relations
+  order       Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+  @@map("kitchen_orders")
+}
+
+model Inventory {
+  id             String    @id @default(cuid())
+  name           String
+  unit           String    // kg, litres, pieces, etc.
+  quantity        Decimal   @default(0)
+  minQuantity    Decimal   @default(0)
+  costPerUnit    Int       @default(0) // paise
+  supplierId     String?
+  lastRestocked  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  supplier       Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+  @@map("inventory")
+}
+
+model Supplier {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  address   String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  inventory Inventory[]
+
+  @@map("suppliers")
+}
+
+model Bill {
+  id                 String        @id @default(cuid())
+  orderId            String        @unique
+  customerId         String?
+  amount             Int           // paise
+  tax                Int           // paise
+  discount           Int           @default(0)
+  total              Int           // paise
+  paymentMethod      String?       // razorpay, cash, card, upi
+  paymentStatus      PaymentStatus @default(PENDING)
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  // Relations
+  order              Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer           Customer?     @relation(fields: [customerId], references: [id])
+
+  @@index([orderId])
+  @@index([paymentStatus])
+  @@map("bills")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType @default(GENERAL)
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  data      Json?
+  createdAt DateTime         @default(now())
+
+  // Relations
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  type      String   @default("string") // string, number, boolean, json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // CREATE, UPDATE, DELETE, LOGIN, etc.
+  entity    String   // order, menu_item, reservation, etc.
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}

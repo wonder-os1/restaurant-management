@@ -1,0 +1,19 @@
+{
+  "appName": "FoodKing",
+  "slug": "foodking",
+  "primaryColor": "#ea580c",
+  "apiUrl": "https://api.example.com",
+  "features": {
+    "onlineOrdering": true,
+    "tableReservation": true,
+    "kitchenDisplay": false,
+    "deliveryTracking": false,
+    "loyaltyProgram": false
+  },
+  "ios": {
+    "bundleIdentifier": "app.wonderos.foodking"
+  },
+  "android": {
+    "packageName": "app.wonderos.foodking"
+  }
+}

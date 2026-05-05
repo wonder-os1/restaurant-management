@@ -1,0 +1,20 @@
+FeastFlow Restaurant Management App
+
+Test Account:
+Email: demo@restaurant.com
+Password: demo1234
+
+Features to test:
+- Login with test credentials
+- View dashboard with daily summary and stats
+- Browse active orders and order details
+- Create a new dine-in, takeaway, or delivery order
+- Browse menu items by category
+- View and manage table statuses
+- Create and manage reservations
+- Kitchen display for order preparation tracking
+- Update order status through workflow
+- User profile and settings
+
+Note: This is a restaurant management template app.
+All data shown is demo/test data.

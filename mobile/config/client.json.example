@@ -1,0 +1,20 @@
+{
+  "branding": {
+    "appName": "FeastFlow Restaurant",
+    "primaryColor": "#EA580C",
+    "tagline": "Delicious Food, Seamless Service"
+  },
+  "features": {
+    "onlineOrdering": false,
+    "tableReservations": true,
+    "kitchenDisplay": true,
+    "smsNotifications": false,
+    "whatsappAutomation": false,
+    "aiChatbot": false,
+    "advancedAnalytics": false,
+    "loyaltyProgram": false
+  },
+  "environment": {
+    "API_URL": "http://localhost:4000/api"
+  }
+}

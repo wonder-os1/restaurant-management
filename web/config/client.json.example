@@ -1,0 +1,19 @@
+{
+  "branding": {
+    "appName": "FoodKing Restaurant",
+    "primaryColor": "#ea580c",
+    "tagline": "Delicious Food, Delivered Fresh",
+    "logoUrl": ""
+  },
+  "features": {
+    "onlineOrdering": true,
+    "tableReservation": true,
+    "kitchenDisplay": false,
+    "inventoryManagement": false,
+    "loyaltyProgram": false,
+    "deliveryTracking": false
+  },
+  "environment": {
+    "API_URL": "http://localhost:4000/api"
+  }
+}

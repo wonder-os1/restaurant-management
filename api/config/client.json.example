@@ -1,0 +1,43 @@
+{
+  "branding": {
+    "appName": "Spice Garden Restaurant",
+    "primaryColor": "#e11d48",
+    "tagline": "Authentic Flavors, Unforgettable Experience",
+    "logoUrl": ""
+  },
+  "features": {
+    "onlineOrdering": false,
+    "deliveryManagement": false,
+    "tableReservations": false,
+    "kitchenDisplay": false,
+    "posIntegration": false,
+    "inventoryManagement": false,
+    "loyaltyProgram": false,
+    "qrMenu": false,
+    "smsNotifications": false,
+    "whatsappAutomation": false,
+    "aiChatbot": false,
+    "advancedAnalytics": false
+  },
+  "environment": {
+    "DATABASE_URL": "postgresql://user:password@localhost:5432/restaurant_db",
+    "JWT_SECRET": "change-this-secret",
+    "RAZORPAY_KEY_ID": "",
+    "RAZORPAY_KEY_SECRET": "",
+    "RAZORPAY_WEBHOOK_SECRET": "",
+    "RESEND_API_KEY": "",
+    "EMAIL_FROM": "noreply@yourdomain.com",
+    "APP_URL": "http://localhost:3000",
+    "API_URL": "http://localhost:4000"
+  },
+  "business": {
+    "currency": "INR",
+    "timezone": "Asia/Kolkata",
+    "businessHours": { "start": "10:00", "end": "23:00" },
+    "gstRate": 5,
+    "serviceChargeRate": 10,
+    "deliveryRadius": 10,
+    "minOrderAmount": 20000,
+    "avgPrepTime": 30
+  }
+}
